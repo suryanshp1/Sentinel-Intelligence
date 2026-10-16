@@ -1,0 +1,62 @@
+groups:
+  - name: sentinel_alerts
+    rules:
+      - alert: SentinelApiDown
+        expr: up{job="sentinel-intelligence"} == 0 or sentinel_service_ready == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Sentinel API instance is down or unhealthy"
+          description: "Sentinel API service has failed health/readiness checks for over 1 minute."
+
+      - alert: SentinelDatabaseDisconnected
+        expr: sentinel_db_ready == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Sentinel PostgreSQL connection lost"
+          description: "Database connection pool is reporting failure to reach PostgreSQL."
+
+      - alert: SentinelSecurityStoreUnavailable
+        expr: sentinel_security_ready == 0
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Sentinel Valkey/Redis session store unreachable"
+          description: "Distributed rate-limit and session store is reporting offline."
+
+      - alert: SentinelHighHttpErrorRate
+        expr: |
+          (
+            sum(rate(sentinel_http_requests_total{status=~"5.."}[5m]))
+            /
+            sum(rate(sentinel_http_requests_total[5m]))
+          ) * 100 > 5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High HTTP 5xx error rate detected"
+          description: "Over 5% of API requests returned 5xx status codes in the past 5 minutes."
+
+      - alert: SentinelHighP99Latency
+        expr: |
+          histogram_quantile(0.99, sum(rate(sentinel_http_request_duration_seconds_bucket[5m])) by (le)) > 2.0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Sentinel API P99 latency degraded"
+          description: "P99 HTTP response latency has exceeded 2.0 seconds over a 5-minute window."
+
+      - alert: SentinelSourceSyncDegraded
+        expr: sentinel_source_healthy == 0
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Intelligence upstream feed source failing"
+          description: "Upstream intelligence feed {{ $labels.source }} has reported unhealthy status for 30+ minutes."

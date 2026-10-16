@@ -1,5 +1,6 @@
 mod mcp;
 mod security;
+mod telemetry;
 use async_graphql::{Context, EmptyMutation, EmptySubscription, Object, Schema};
 use axum::{
     extract::{Path, Query, Request, State},
@@ -24,6 +25,7 @@ struct App {
     db: vi_db::Database,
     security: security::Security,
     buckets: Arc<Mutex<HashMap<String, (Instant, u32)>>>,
+    metrics: Arc<telemetry::Metrics>,
 }
 type ApiResult = Result<Json<Value>, (StatusCode, Json<Value>)>;
 fn err(status: StatusCode, detail: impl ToString) -> (StatusCode, Json<Value>) {
@@ -33,12 +35,13 @@ fn err(status: StatusCode, detail: impl ToString) -> (StatusCode, Json<Value>) {
     )
 }
 fn database_error(error: String) -> (StatusCode, Json<Value>) {
-    eprintln!("{}", json!({"event":"database_error","error":error}));
+    tracing::error!(event = "database_error", error = %error, "Database operation error");
     err(
         StatusCode::SERVICE_UNAVAILABLE,
         "Database operation unavailable",
     )
 }
+
 #[derive(Deserialize, Serialize, Default, utoipa::ToSchema)]
 struct Filter {
     #[serde(default)]
@@ -421,7 +424,7 @@ async fn analyze(State(app): State<App>, Json(payload): Json<Value>) -> ApiResul
         .cloned()
         .collect();
     let upstream = vi_ingest::osv_analyze(&versioned).await.map_err(|e| {
-        eprintln!("OSV analysis: {e}");
+        tracing::warn!(error = %e, "OSV analysis query failed");
         err(
             StatusCode::BAD_GATEWAY,
             "OSV could not complete the applicability query; no clean result is inferred",
@@ -631,13 +634,16 @@ async fn docs() -> Html<&'static str> {
 }
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    telemetry::init_tracing("sentinel-api");
     let db = vi_db::Database::new();
     db.initialize().await.map_err(std::io::Error::other)?;
     let security = security::Security::new().map_err(std::io::Error::other)?;
+    let metrics_collector = Arc::new(telemetry::Metrics::default());
     let app = App {
         db,
         security,
         buckets: Default::default(),
+        metrics: metrics_collector.clone(),
     };
     let api = Router::new()
         .route(
@@ -685,6 +691,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Json(json!({"title":"Sentinel local STIX export","api_roots":["/api/v21/"]}))
             }),
         )
+        .layer(middleware::from_fn_with_state(
+            metrics_collector.clone(),
+            telemetry::track_telemetry,
+        ))
         .with_state(app)
         .layer(tower_http::limit::RequestBodyLimitLayer::new(
             10 * 1024 * 1024,
@@ -695,7 +705,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::env::var("BIND_ADDR").unwrap_or_else(|_| "127.0.0.1".into())
     ))
     .await?;
-    println!("Sentinel API listening on http://localhost:{port}");
+    tracing::info!(port = %port, "Sentinel API listening");
     axum::serve(
         listener,
         router.into_make_service_with_connect_info::<std::net::SocketAddr>(),
@@ -721,26 +731,15 @@ async fn shutdown() {
     }
 }
 async fn metrics(State(app): State<App>) -> Response {
-    match app.db.stats().await {
-        Ok(stats) => {
-            let mut body=String::from("# HELP sentinel_vulnerabilities Ingested source-backed CVE records\n# TYPE sentinel_vulnerabilities gauge\n");
-            body.push_str(&format!("sentinel_vulnerabilities {}\n", stats["total"]));
-            for source in stats["sources"].as_array().unwrap_or(&vec![]) {
-                let name = source["source_name"]
-                    .as_str()
-                    .unwrap_or("")
-                    .replace('"', "");
-                body.push_str(&format!(
-                    "sentinel_source_healthy{{source=\"{name}\"}} {}\n",
-                    if source["status"] == "Healthy" { 1 } else { 0 }
-                ));
-            }
-            (
-                [(axum::http::header::CONTENT_TYPE, "text/plain;version=0.0.4")],
-                body,
-            )
-                .into_response()
-        }
-        Err(e) => database_error(e).into_response(),
-    }
+    let db_ready = app.db.ready().await;
+    let security_ready = app.security.ready().await;
+    let stats = app.db.stats().await.ok();
+    let body = app
+        .metrics
+        .render_prometheus(stats.as_ref(), db_ready, security_ready);
+    (
+        [(axum::http::header::CONTENT_TYPE, "text/plain;version=0.0.4")],
+        body,
+    )
+        .into_response()
 }
