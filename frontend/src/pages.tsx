@@ -236,10 +236,10 @@ export function Overview({ onSelect }: SelectProps) {
                     x2="735"
                     y1={35 + n * 52}
                     y2={35 + n * 52}
-                    stroke="#252525"
+                    stroke="var(--theme-border, #252525)"
                     strokeDasharray="3 5"
                   />
-                  <text x="46" textAnchor="end" y={39 + n * 52} fill="#aaa" fontSize="12">
+                  <text x="46" textAnchor="end" y={39 + n * 52} fill="var(--theme-text-secondary, #aaa)" fontSize="12">
                     {Math.round(max - (n * max) / 3)}
                   </text>
                 </g>
@@ -282,7 +282,7 @@ export function Overview({ onSelect }: SelectProps) {
                     x={pointX(i)}
                     y="222"
                     textAnchor="middle"
-                    fill="#aaa"
+                    fill="var(--theme-text-secondary, #aaa)"
                     fontSize="13"
                   >
                     {period === "Last 12 months"

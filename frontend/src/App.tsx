@@ -31,6 +31,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { api, type Stats } from "./types";
 import { AccessGate } from "./auth";
+import { ThemeToggle } from "./theme";
 import { DetailDrawer, useStored } from "./components";
 import {
   Overview,
@@ -245,6 +246,7 @@ export default function App() {
             <strong>{current}</strong>
           </div>
           <div className="topbar-actions">
+            <ThemeToggle />
             <form
               className="global-search"
               onSubmit={(e) => {

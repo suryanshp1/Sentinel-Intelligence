@@ -6,6 +6,7 @@ import "@fontsource-variable/inter";
 import "@xyflow/react/dist/style.css";
 import "./styles.css";
 import App from "./App";
+import { ThemeProvider } from "./theme";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { retry: 1, staleTime: 60000, refetchOnWindowFocus: false },
@@ -13,10 +14,12 @@ const queryClient = new QueryClient({
 });
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
+    <ThemeProvider>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <App />
       </BrowserRouter>
     </QueryClientProvider>
+    </ThemeProvider>
   </React.StrictMode>,
 );

@@ -28,6 +28,7 @@ import {
 } from "@xyflow/react";
 import { api, download, downloadBlob, type Vulnerability } from "./types";
 import { sourceDescription, vulnerabilityExport, type ExportProgress } from "./ui-data";
+import { useTheme } from "./theme";
 
 export function ExportButton({ filter = {}, name, label = "Export", primary = false }: {
   filter?: Record<string, unknown>; name: string; label?: string; primary?: boolean;
@@ -154,13 +155,14 @@ export function Loading() {
   );
 }
 export function Graph({ nodes, edges }: { nodes: Node[]; edges: Edge[] }) {
+ const { theme } = useTheme();
  const [graphNodes,setNodes,onNodesChange]=useNodesState(nodes);
  const [graphEdges,setEdges,onEdgesChange]=useEdgesState(edges);
  const instance=useRef<ReactFlowInstance|null>(null);
  const container=useRef<HTMLDivElement>(null);
  useEffect(()=>{setNodes(nodes);setEdges(edges);const frame=requestAnimationFrame(()=>instance.current?.fitView({padding:0.15,maxZoom:1.1}));return()=>cancelAnimationFrame(frame)},[nodes,edges,setNodes,setEdges]);
  useEffect(()=>{const element=container.current;if(!element)return;let frame=0;const observer=new ResizeObserver(()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>instance.current?.fitView({padding:0.15,maxZoom:1.1}))});observer.observe(element);return()=>{observer.disconnect();cancelAnimationFrame(frame)}},[]);
- return <div ref={container} className="graph" aria-label="Interactive intelligence relationship graph"><ReactFlow nodes={graphNodes} edges={graphEdges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onInit={flow=>{instance.current=flow}} fitView fitViewOptions={{padding:0.15,maxZoom:1.1}} minZoom={0.3} maxZoom={1.5} colorMode="dark" nodesDraggable nodesConnectable={false}><Background color="#303030" gap={24}/><Controls showInteractive={false}/></ReactFlow></div>;
+ return <div ref={container} className="graph" aria-label="Interactive intelligence relationship graph"><ReactFlow nodes={graphNodes} edges={graphEdges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onInit={flow=>{instance.current=flow}} fitView fitViewOptions={{padding:0.15,maxZoom:1.1}} minZoom={0.3} maxZoom={1.5} colorMode={theme} nodesDraggable nodesConnectable={false}><Background color="var(--graph-grid, #303030)" gap={24}/><Controls showInteractive={false}/></ReactFlow></div>;
 }
 export function useStored<T>(key: string, initial: T) {
   const [value, setValue] = useState<T>(() => {
