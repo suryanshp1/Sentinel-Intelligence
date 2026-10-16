@@ -1,0 +1,15 @@
+[package]
+name = "vi-db"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-only"
+[dependencies]
+serde_json.workspace = true
+vi-core.workspace = true
+tokio.workspace = true
+tokio-postgres = { version = "0.7", features = ["with-serde_json-1"] }
+deadpool-postgres = "0.14"
+fs2 = "0.4"
+base64 = "0.22"
+chrono.workspace = true
+uuid = {version="1",features=["v4"]}

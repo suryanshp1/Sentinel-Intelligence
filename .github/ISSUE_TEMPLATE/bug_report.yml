@@ -1,0 +1,33 @@
+name: Bug report
+description: Report a reproducible problem in Sentinel.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: "For vulnerabilities in Sentinel, follow SECURITY.md and use private reporting. Remove tokens, private inventories, and sensitive logs."
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the actual behavior and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include a minimal example with public or synthetic data.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Commit or version, OS, browser, and local or Compose deployment. Include Node and Rust versions when relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Relevant evidence
+      description: Sanitized errors, screenshots, and original source URLs for intelligence discrepancies. Do not attach secrets, private SBOMs, or database dumps.

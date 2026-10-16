@@ -1,0 +1,14 @@
+Sentinel Intelligence
+Copyright (c) 2026 Sentinel Intelligence contributors
+
+Sentinel's original source code is licensed under version 3 of the GNU
+General Public License only (SPDX-License-Identifier: GPL-3.0-only).
+See LICENSE for the complete terms and warranty disclaimer.
+
+The license text was obtained from the SPDX license-list-data project:
+https://github.com/spdx/license-list-data/blob/main/text/GPL-3.0-only.txt
+
+Third-party software, imported intelligence, advisory text, detection
+artifacts, and source material shown in screenshots retain their respective
+licenses and attribution requirements. This notice does not relicense them.
+See SOURCES.md and the relevant upstream notices.

@@ -1,0 +1,23 @@
+[package]
+name = "vi-ingest"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-only"
+[dependencies]
+serde_json.workspace = true
+vi-core.workspace = true
+vi-db.workspace = true
+tokio.workspace = true
+chrono.workspace = true
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+serde.workspace = true
+sha2 = "0.10"
+regex = "1"
+serde_yaml = "0.9"
+flate2 = "1"
+csv = "1"
+url = "2"
+tar = "0.4"
+[[bin]]
+name = "vi-worker"
+path = "src/main.rs"

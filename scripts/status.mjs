@@ -1,0 +1,2 @@
+import {environment} from './environment.mjs';
+const env=environment();const response=await fetch('http://127.0.0.1:8080/api/stats/',{headers:env.VI_API_TOKEN?{Authorization:`Bearer ${env.VI_API_TOKEN}`}:{}});const data=await response.json();if(!response.ok){console.error(data);process.exit(1)}console.log(JSON.stringify({total:data.total,kev:data.kev,mode:data.mode,sources:data.sources.map(s=>({source:s.source_name,status:s.status,records:s.records,error:s.last_error}))},null,2));

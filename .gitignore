@@ -1,0 +1,21 @@
+node_modules/
+frontend/dist/
+backend/target/
+backend/data/state.json
+.env
+.playwright-cli/
+.DS_Store
+
+backend/data/
+output/
+backups/
+
+# Local secrets and tooling state
+.env.*
+!.env.example
+.codex/
+.agents/
+.aider-desk/
+.aws/
+*.log
+*.tsbuildinfo

@@ -1,0 +1,2 @@
+import {readFileSync,existsSync} from 'node:fs';
+export function environment(){const env={...process.env};if(existsSync('.env'))for(const line of readFileSync('.env','utf8').split('\n')){const i=line.indexOf('=');if(i>0&&!line.startsWith('#'))env[line.slice(0,i)]=line.slice(i+1)}if(env.POSTGRES_PASSWORD){env.DATABASE_URL ||= `postgresql://${env.VI_DB_PASSWORD?"sentinel_app":"sentinel"}:${env.VI_DB_PASSWORD||env.POSTGRES_PASSWORD}@127.0.0.1:5433/sentinel`;env.REDIS_URL ||= 'redis://127.0.0.1:6380'}return env}

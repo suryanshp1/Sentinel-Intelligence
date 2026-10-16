@@ -1,0 +1,20 @@
+{
+  "name": "sentinel-intelligence",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "npm --prefix frontend run build",
+    "test": "npm run test:backend && npm run test:frontend",
+    "start": "node scripts/dev.mjs",
+    "setup": "node scripts/setup.mjs",
+    "ingest": "node scripts/run-worker.mjs --once",
+    "test:backend": "cargo test --manifest-path backend/Cargo.toml --locked",
+    "test:frontend": "npm --prefix frontend test"
+  },
+  "description": "Self-hosted vulnerability intelligence with source-backed CVE research, SBOM analysis, and MCP tools.",
+  "license": "GPL-3.0-only",
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

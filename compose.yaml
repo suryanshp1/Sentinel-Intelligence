@@ -1,0 +1,84 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: sentinel
+      POSTGRES_USER: sentinel
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      VI_DB_PASSWORD: ${VI_DB_PASSWORD:?Set VI_DB_PASSWORD or run npm run setup}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./deploy/postgres-init.sql:/docker-entrypoint-initdb.d/01-runtime-role.sql:ro
+      - ./deploy/runtime-role.sql:/opt/sentinel/runtime-role.sql:ro
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -h 127.0.0.1 -U sentinel -d sentinel]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    restart: unless-stopped
+    shm_size: 256mb
+  valkey:
+    image: valkey/valkey:8-alpine
+    command: [valkey-server, --appendonly, "yes", --maxmemory, 256mb, --maxmemory-policy, noeviction]
+    volumes: [valkey_data:/data]
+    healthcheck:
+      test: [CMD, valkey-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+  vi-api:
+    build: ./backend
+    init: true
+    environment:
+      DATABASE_URL: postgresql://sentinel_app:${VI_DB_PASSWORD:?Run npm run setup first}@postgres:5432/sentinel
+      REDIS_URL: redis://valkey:6379
+      BIND_ADDR: 0.0.0.0
+      VI_ENV: production
+      VI_API_TOKEN: ${VI_API_TOKEN:?Set VI_API_TOKEN with at least 32 characters}
+      VI_PUBLIC_ORIGIN: ${VI_PUBLIC_ORIGIN:-http://localhost:3000}
+      VI_TRUST_LOCAL_VEX: "false"
+      VI_FEED_CACHE: /tmp/vi-api-feed-cache
+    depends_on:
+      postgres: {condition: service_healthy}
+      valkey: {condition: service_healthy}
+    ports: [127.0.0.1:8080:8080]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    stop_grace_period: 30s
+  vi-worker:
+    build: ./backend
+    command: [vi-worker]
+    init: true
+    environment:
+      DATABASE_URL: postgresql://sentinel_app:${VI_DB_PASSWORD:?Run npm run setup first}@postgres:5432/sentinel
+      VI_FEED_CACHE: /var/lib/vi/feed-cache
+      VI_VEX_IMPORT_DIR: /var/lib/vi/vex-import
+      NVD_API_KEY: ${NVD_API_KEY:-}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      VI_NVD_START: ${VI_NVD_START:-}
+    volumes: [feed_data:/var/lib/vi]
+    depends_on:
+      postgres: {condition: service_healthy}
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    stop_grace_period: 30s
+  vi-web:
+    build: ./frontend
+    ports: [127.0.0.1:3000:8080]
+    depends_on: [vi-api]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+volumes:
+  pg_data:
+  valkey_data:
+  feed_data:

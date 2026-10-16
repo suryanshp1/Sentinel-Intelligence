@@ -1,0 +1,29 @@
+name: Feature request
+description: Propose a focused improvement or integration.
+title: "[Feature]: "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+      description: Who is affected, and what are they trying to accomplish?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the outcome and any relevant evidence, examples, or source documentation.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and tradeoffs
+      description: Consider existing workflows, source licensing, deployment impact, and authentication where relevant.
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Participation
+      options:
+        - label: I would like to help implement or verify this proposal.
