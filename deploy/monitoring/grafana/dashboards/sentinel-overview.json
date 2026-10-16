@@ -1,0 +1,151 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "id": 1,
+      "title": "API Service Readiness",
+      "type": "stat",
+      "targets": [
+        { "expr": "sentinel_service_ready", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "options": { "0": { "color": "red", "text": "DOWN" }, "1": { "color": "green", "text": "READY" } }, "type": "value" }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        }
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "id": 2,
+      "title": "PostgreSQL Ready",
+      "type": "stat",
+      "targets": [
+        { "expr": "sentinel_db_ready", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "options": { "0": { "color": "red", "text": "DISCONNECTED" }, "1": { "color": "green", "text": "CONNECTED" } }, "type": "value" }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        }
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "id": 3,
+      "title": "Valkey / Redis Ready",
+      "type": "stat",
+      "targets": [
+        { "expr": "sentinel_security_ready", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "options": { "0": { "color": "red", "text": "OFFLINE" }, "1": { "color": "green", "text": "ONLINE" } }, "type": "value" }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        }
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "id": 4,
+      "title": "Ingested Vulnerabilities",
+      "type": "stat",
+      "targets": [
+        { "expr": "sentinel_vulnerabilities", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "locale"
+        }
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "id": 5,
+      "title": "HTTP Request Throughput (req/sec)",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "sum by (method, path, status) (rate(sentinel_http_requests_total[1m]))", "legendFormat": "{{method}} {{path}} ({{status}})", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth" },
+          "unit": "reqps"
+        }
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "id": 6,
+      "title": "HTTP Latency (P50, P90, P99)",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum(rate(sentinel_http_request_duration_seconds_bucket[2m])) by (le))", "legendFormat": "P50", "refId": "A" },
+        { "expr": "histogram_quantile(0.90, sum(rate(sentinel_http_request_duration_seconds_bucket[2m])) by (le))", "legendFormat": "P90", "refId": "B" },
+        { "expr": "histogram_quantile(0.99, sum(rate(sentinel_http_request_duration_seconds_bucket[2m])) by (le))", "legendFormat": "P99", "refId": "C" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth" },
+          "unit": "s"
+        }
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 12 },
+      "id": 7,
+      "title": "In-Flight HTTP Requests",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "sentinel_http_requests_in_flight", "legendFormat": "active requests", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line" },
+          "unit": "short"
+        }
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 12 },
+      "id": 8,
+      "title": "Intelligence Upstream Source Health",
+      "type": "table",
+      "targets": [
+        { "expr": "sentinel_source_healthy", "legendFormat": "{{source}}", "instant": true, "refId": "A" },
+        { "expr": "sentinel_source_records", "legendFormat": "{{source}} records", "instant": true, "refId": "B" }
+      ]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": ["sentinel", "threat-intel", "security"],
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Sentinel Threat Intelligence Overview",
+  "uid": "sentinel-overview",
+  "version": 1
+}

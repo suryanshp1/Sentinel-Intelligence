@@ -37,12 +37,37 @@ Graceful SIGTERM aborts active worker tasks and releases that worker's leases. A
 
 Vendor CSAF/OpenVEX imports require files under `VI_VEX_IMPORT_DIR`. Supply that directory from a publisher verification process. The current importer does not establish signatures or publisher identity. Leave `VI_TRUST_LOCAL_VEX=false` unless your operator process explicitly accepts locally authored statements. Do not present this option as signature validation.
 
-## Monitoring
+## Logging & Monitoring
 
-- `/health`: API process liveness.
-- `/readyz`: PostgreSQL and Valkey readiness; use it for load balancer readiness checks.
-- `/api/metrics`: authenticated Prometheus text metrics.
-- `node scripts/status.mjs`: local catalog counts and source error summary.
-- Container stdout/stderr: structured source completion events and API logs.
+### Structured Logging & Tracing
 
-The Compose stack restarts failed services but does not include a hosted alerting service. Add your open-source monitoring system, backup schedule, disk/volume alerts, and source freshness alerts for an operational deployment. Set a retention policy for audit events, ingestion jobs, and feed caches based on your capacity. Capacity, failover, and penetration tests have not been certified by this implementation.
+Sentinel API (`vi-server`) and ingestion worker (`vi-worker`) emit structured telemetry using `tracing` and `tracing-subscriber`:
+
+- **Log Level**: Controlled via standard `RUST_LOG` environment variable (e.g., `RUST_LOG=info`, `RUST_LOG=debug,tower_http=trace`). Defaults to `info`.
+- **Output Formats**:
+  - `VI_ENV=production` or `LOG_FORMAT=json`: Emits structured JSON events to `stdout`/`stderr` with timestamps, spans, target, status codes, and error traces. Suitable for ingestion into Loki, Vector, Fluentbit, or Datadog.
+  - Development mode (`VI_ENV=development`): Emits compact, human-readable terminal output.
+- **Request Tracing**: Inbound HTTP requests extract or assign a unique `X-Request-ID` UUID header, log request completion duration in milliseconds, and echo `x-request-id` in response headers for end-to-end audit tracing.
+
+### Health & Metrics Endpoints
+
+- `/health`: Fast unauthenticated process liveness probe (`{"status":"ok","version":"0.1.0"}`).
+- `/readyz`: Infrastructure readiness probe validating active PostgreSQL and Valkey connectivity; returns `503 Service Unavailable` if backing stores are offline.
+- `/api/metrics`: Authenticated Prometheus exposition format 0.0.4 endpoint exposing:
+  - **RED Metrics**: `sentinel_http_requests_total{method, path, status}` with parameterized path masking (e.g. `/api/vulnerabilities/:id`) to prevent Prometheus label cardinality explosion.
+  - **Latency Histograms**: `sentinel_http_request_duration_seconds_bucket{le=...}`, `_sum`, `_count`.
+  - **In-flight Requests**: `sentinel_http_requests_in_flight` gauge.
+  - **Component State**: `sentinel_service_ready`, `sentinel_db_ready`, and `sentinel_security_ready` gauges.
+  - **Catalog & Feed Metrics**: `sentinel_vulnerabilities`, `sentinel_cisa_kev_total`, `sentinel_source_healthy{source=...}`, and `sentinel_source_records{source=...}`.
+
+### Turnkey Prometheus & Grafana Monitoring
+
+To launch the integrated local monitoring stack:
+
+```sh
+docker compose -f compose.yaml -f compose.monitoring.yaml up -d
+```
+
+- **Prometheus**: Runs at `http://localhost:9090`, scraping `/api/metrics` every 15s using `VI_API_TOKEN`. Includes rules in `deploy/monitoring/alert_rules.yml` for API outages, DB disconnections, 5xx error spikes (>5%), P99 latency spikes (>2s), and degraded feed sources.
+- **Grafana**: Runs at `http://localhost:3001` (default credentials: `admin` / `sentinel`), pre-provisioned with the "Sentinel Threat Intelligence Overview" dashboard (`deploy/monitoring/grafana/dashboards/sentinel-overview.json`).
+

@@ -6,11 +6,17 @@ Sentinel brings public vulnerability feeds, exploit signals, threat actor profil
 
 Built with **Rust · Axum · React · TypeScript · PostgreSQL · Valkey**. No paid service or model provider is required. Imported data remains subject to its upstream terms and attribution requirements.
 
-[Get started](#quick-start) · [Architecture](#architecture) · [Connect an AI](#mcp-for-ai-clients) · [Contribute](CONTRIBUTING.md) · [Roadmap](ROADMAP.md)
+[Watch the demo](#demo-walkthrough) · [Get started](#quick-start) · [Architecture](#architecture) · [Connect an AI](#mcp-for-ai-clients) · [Contribute](CONTRIBUTING.md) · [Roadmap](ROADMAP.md)
 
-![Sentinel Intelligence overview showing the vulnerability catalog, known exploitation, activity, and source-reported decisions](docs/images/overview.png)
+## Demo walkthrough
 
-*Actual app screenshot with ingested public-source intelligence. Counts are snapshots of that installation; a new installation starts empty.*
+[![Watch the Sentinel app walkthrough: intelligence overview, vulnerability research, threat actors, and the SBOM workbench](docs/images/overview.png)](docs/videos/sentinel-walkthrough.mp4)
+
+**[Watch the walkthrough (MP4 · 1 min 52 sec)](docs/videos/sentinel-walkthrough.mp4)** — click the preview above to open the video.
+
+The silent recording walks through the intelligence overview, searches for CVE-2021-44228 and opens its evidence, explores the MITRE ATT&CK APT28 profile, submits the built-in sample SBOM for analysis, and checks data-source freshness. SBOM results depend on live OSV access and are not shown in this recording.
+
+*Real app captures with ingested public-source intelligence, recorded on 16 October 2026. Counts and source status are snapshots of that installation; a new installation starts empty. See the [recording notes](docs/videos/README.md).*
 
 ## What you can do
 

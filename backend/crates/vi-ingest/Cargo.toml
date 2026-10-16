@@ -18,6 +18,9 @@ flate2 = "1"
 csv = "1"
 url = "2"
 tar = "0.4"
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
 [[bin]]
 name = "vi-worker"
 path = "src/main.rs"
